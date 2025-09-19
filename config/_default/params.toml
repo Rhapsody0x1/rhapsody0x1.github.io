@@ -5,16 +5,15 @@ rssFullContent = true
 favicon = "/favicon.png"
 
 [footer]
-since = 2020
-customText = ""
+since = 2022
+customText = "本博客主题效果基于 Stack 改进而来"
 
 [dateFormat]
 published = "Jan 02, 2006"
 lastUpdated = "Jan 02, 2006 15:04 MST"
 
 [sidebar]
-emoji = "🍥"
-subtitle = "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+subtitle = "逆行于人迹罕至之路❄️"
 
 [sidebar.avatar]
 enabled = true
@@ -22,9 +21,11 @@ local = true
 src = "img/avatar.png"
 
 [article]
-headingAnchor = false
-math = false
+headingAnchor = true
+math = true
 readingTime = true
+wordCount = true
+
 
 [article.license]
 enabled = true

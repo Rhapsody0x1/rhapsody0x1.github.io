@@ -2,7 +2,7 @@
 title: Links
 links:
   - title: GitHub
-    description: GitHub is the world's largest software development platform.
+    description: GitHub 是世界上最大的开源仓库托管平台
     website: https://github.com
     image: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
 menu:
@@ -14,20 +14,6 @@ menu:
 comments: false
 ---
 
-To use this feature, add `links` section to frontmatter.
+总之这来用来放友链。
 
-This page's frontmatter:
-
-```yaml
-links:
-  - title: GitHub
-    description: GitHub is the world's largest software development platform.
-    website: https://github.com
-    image: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-  - title: TypeScript
-    description: TypeScript is a typed superset of JavaScript that compiles to plain JavaScript.
-    website: https://www.typescriptlang.org
-    image: ts-logo-128.jpg
-```
-
-`image` field accepts both local and external images.
+想要将你的博客或者网站添加到这里？可以直接在[博客仓库](https://github.com/Rhapsody0x1/rhapsody0x1.github.io)发起一个 Issue。
