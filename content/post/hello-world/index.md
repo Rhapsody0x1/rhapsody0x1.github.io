@@ -2,7 +2,7 @@
 title: 你好，Hugo
 description: 初次尝试使用 Hugo 来搭建博客
 slug: hello-world
-date: 2025-09-19 23:20:00+0000
+date: 2025-09-18 23:20:00+0000
 image: cover.jpg
 categories:
     - Blog
