@@ -10,7 +10,7 @@ tags:
     - Trials
     - Hugo
     - Frontend
-weight: 1       # You can add weight to some posts to override the default sorting (date descending)
+weight: 1
 ---
 
 好吧，调了两天算是正式把博客搭起来了。~~Hugo 太好用了你知道吗~~

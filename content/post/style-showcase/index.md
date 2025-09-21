@@ -3,6 +3,7 @@ title: 样式测试
 description: 用于测试各种元素的显示效果
 slug: style-showcase
 date: 2025-09-21 7:32:00+0000
+image: cover.jpg
 categories:
     - Blog
 tags:
@@ -100,7 +101,7 @@ console.table(posts);
 
 ## 图片
 
-![示例图片](/bg.jpg)
+![示例图片](https://images.unsplash.com/photo-1756806983725-977bb2308d4e?ixlib=rb-4.1.0&q=85&fm=jpg&crop=entropy&cs=srgb&dl=pawel-czerwinski-uBReUvlYvyY-unsplash.jpg)
 
 ---
 
