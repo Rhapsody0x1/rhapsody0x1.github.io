@@ -68,3 +68,22 @@ html {
     background-color: #4076c1 !important;
     color: #fff;
 }
+
+/* giscus 评论主题适配 */
+.giscus {
+    background-color: rgba(255, 255, 255, 0.38);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    backdrop-filter: blur(16px) saturate(140%);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    padding: 12px;
+}
+
+/* 暗色模式下的容器滤镜强度和背景色微调 */
+[data-scheme="dark"] .giscus {
+    background-color: rgba(11, 14, 23, 0);
+    border-color: rgba(255, 255, 255, 0.05);
+    -webkit-backdrop-filter: blur(16px) saturate(60%);
+    backdrop-filter: blur(16px) saturate(60%);
+}
