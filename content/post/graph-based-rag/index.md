@@ -2,7 +2,7 @@
 title: 基于图的各种检索增强生成 (RAG) 方法
 description: GraphRAG、LightRAG 和 HyperGraphRAG
 slug: graph-based-rag
-date: 2025-09-25 13:53:54+0000
+date: 2025-09-26 17:27:52+0000
 image: cover.jpg
 categories:
     - Papers
@@ -151,11 +151,13 @@ GraphRAG 和传统 RAG 一样先采用**固定长度**分块法切分文本，�
   
   - 由于本地模型的性能限制，其可能**无法**输出正确的 JSON 格式结果导致嵌入过程失败。
 
-另外，笔者认为 GraphRAG 的论文采用的研究方法本身也存在一定问题。
+另外，花费了如此庞大的代价构建索引后，如果还想加入新的文档，必须**从头开始**所有的嵌入过程。这在生产环境下几乎是不可接受的。
+
+以上的原因直接导致了 GraphRAG 难以投入实际生产使用。
 
 #### 数据集
 
-GraphRAG 认为现有的测试集“不适用于**全局感知**任务评估”，因此设计了自己所谓的“自适应测试集”方法（原文 Algorithm 1）。
+GraphRAG 的论文认为现有的测试集“不适用于**全局感知**任务评估”，因此**完全没有**在传统 RAG 使用的测试集上进行测试，而是自己设计了所谓的“自适应测试集”方法 (原文 Algorithm 1)：
 
 1. 生成全局性的问题：
    
@@ -185,7 +187,7 @@ GraphRAG 认为现有的测试集“不适用于**全局感知**任务评估”�
    
    4. 记录胜负评估结果以及 LLM 给出的评判理由。为了保证结果的稳定性，每次比较都会重复多次并取平均值。
 
-其中评估使用的 Prompt 如下：
+评估使用的 Prompt 如下：
 
 ```markdown
 ---Role---
@@ -215,12 +217,121 @@ Assess which answer is better according to the following measure:
 Output:
 ```
 
-其中的 `{criteria}` 部分内容如下：
+其中的 `{criteria}` 部分内容如下，可以明显看出其对“全面性”的偏好性：
+
+- **Comprehensiveness.** How much detail does the answer provide to <u>cover all aspects</u> and details of the question?
+- **Diversity.** How varied and rich is the answer in providing <u>different perspectives</u> and insights on the question?
+- **Empowerment.** How well does the answer help the reader understand and make informed judgments about the topic?
+
+笔者认为，这一测试方法有明显的**先射箭再画靶子**的嫌疑。从目标 (提高回答全面性) 到测试集 (针对性的全局性提问) 到评估指标 (LLM裁判指标) 都是 GraphRAG 方法的“优势区间”。~~说白了就是既当运动员又当裁判。~~
+
+而且，仅在它的数据集上领先无法证明 GraphRAG 具有泛用性。
+
+### 一些缓解办法
+
+GraphRAG 目前在 GitHub 上还在进行活跃的更新。针对于上面的成本问题微软又提出了 LazyGraphRAG，不过笔者还没有仔细研究。
+
+## LightRAG
+
+来自香港大学的学者参考了 GraphRAG 采用图结构来存储知识库的思路，**改良**出了另一种基于图的 RAG 方法。其核心目的是解决 GraphRAG 在成本和效率上的短板。它省去了划分社区和生成摘要这两个成本极其高昂的步骤，改为使用一种基于**双层关键词**的范式。
+
+它和 GraphRAG 一样让 LLM 基于提示词提取实体关系，不过 LightRAG 使用的是一个**三合一**提示词，同时提取**实体**、**关系**和**关键词**。其中的关键词又分为高层关键词和低层关键词。
+
+- 高层关键词概括文本主题；
+
+- 低层关键词概括实体关系。
 
 ```markdown
-• Comprehensiveness. How much detail does the answer provide to cover all aspects and details of the question?
-• Diversity. How varied and rich is the answer in providing different perspectives and insights on the question?
-• Empowerment. How well does the answer help the reader understand and make informed judgments about the topic?
+-Goal-
+Given a text document that is potentially relevant to this activity and a list of entity types, identify all entities of those types from the text and all relationships among the
+identified entities.
+
+-Steps-
+1. Identify all entities. For each identified entity, extract the following information:
+- entity_name: Name of the entity, capitalized
+- entity_type: One of the following types: [organization, person, geo, event]
+- entity_description: Comprehensive description of the entity's attributes and activities
+Format each entity as ("entity"</><entity_name><><entity_type></><entity_description>)
+
+2. From the entities identified in step 1, identify all pairs of (source_entity, target_entity) that are "clearly related" to each other.
+For each pair of related entities, extract the following information:
+- source_entity: name of the source entity, as identified in step 1
+- target_entity: name of the target entity, as identified in step 1
+- relationship_description: explanation as to why you think the source entity and the target entity are related to each other
+- relationship_strength: a numeric score indicating strength of the relationship between the source entity and target entity
+- relationship_keywords: one or more high-level key words that summarize the overarching nature of the relationship, focusing on concepts or themes rather than
+specific details
+Format each relationship as ("relationship"<><source_entity></><target_entity><><relationship_description><><relationship_keywords><><relationship_strength>)
+
+3. Identify high-level key words that summarize the main concepts, themes, or topics of the entire text. These should capture the overarching ideas present
+in the document.
+Format the content-level key words as ("content_keywords"<><high_level_keywords>)
+
+4. Return output in English as a single list of all the entities and relationships identified in steps 1 and 2. Use "##" as the list delimiter.
+
+5. When finished, output <COMPLETE>
+
+-Real Data-
+Entity_types: (entity_types)
+Text: (input_text)
+Output:
 ```
 
-笔者认为，这有明显的**先射箭再画靶子**的嫌疑。从目标 (提高回答全面性) 到测试集 (针对性的全局性提问) 到评估指标 (LLM裁判方法) 都是 GraphRAG 方法的“优势区间”。~~说白了就是既当运动员又当裁判。~~
+这里给出 GraphRAG 的提示词用于对照，其重点在于识别实体和关系：
+
+```markdown
+---Goal--
+Given a text document that is potentially relevant to this activity and a list of entity types, identify
+all entities of those types from the text and all relationships among the identified entities.
+
+---Steps--
+1. Identify all entities. For each identified entity, extract the following information:
+entity name: Name of the entity, capitalized
+entity type: One of the following types: [{entity_types})
+entity description: Comprehensive description of the entity's attributes and activities
+Format each entity as ("entity" {tuple delimiter} <entity_name>{tuple_delimiter}<entity_type>{tuple.
+delimiter) <entity_description>
+2. From the entities identified in step 1, identify all pairs of (source entity, target entity) that
+are clearly related to each other
+For each pair of related entities, extract the following information:
+source entity: name of the source entity, as identified in step 1
+target.entity: name of the target entity, as identified in step 1
+relationship.description: explanation as to why you think the source entity and the target entity are
+related to each other
+relationship strength: a numeric score indicating strength of the relationship between the source entity
+and target entity
+Format each relationship as ("relationship"{tuple delimiter}<source_entity>{tuple_delimiter}<target.
+entity>{tuple_delimiter} <relationship.description>{tuple_delimiter} <relationship_strength>)
+3. Return output in English as a single list of all the entities and relationships identified in steps 1
+and 2. Use{record delimiter} as the list delimiter.
+4. When finished, output (completion delimiter}
+
+---Examples
+Entity-types: ORGANIZATION, PERSON
+Input:
+The Fed is scheduled to meet on Tuesday and Wednesday, with the central bank planning to release its
+latest policy decision on Wednesday at 2:00 p.m. ET, followed by a press conference where Fed Chair
+Jerome Powell will take questions. Investors expect the Federal Open Market Committee to hold its
+benchmark interest rate steady in a range of 5.25%-5.5%.
+Output:
+("entity" (tuple_delimiter} FED{tuple_delimiter} ORGANIZATION{tuple_delimiter The Fed is the Federal Reserve,
+which is setting interest rates on Tuesday and Wednesday)
+{record_delimiter}
+("entity" (tuple delimiter JEROME POWELL tuple delimiter) PERSON{tuple delimiter) Jerome Powell is the chair
+of the Federal Reserve)
+{record.delimiter}
+("entity" {tuple delimiter) FEDERAL OPEN MARKET COMMITTEE (tuple delimiter) ORGANIZATION tuple delimiter The
+Federal Reserve committee makes key decisions about interest rates and the growth of the United States
+money supply)
+{record delimiter}
+("relationship"  tuple delimiter} JEROME POWELL tuple delimiter} FED{tuple delimiter Jerome Powell is the
+Chair of the Federal Reserve and will answer questions at a press conference  tuple delimiter)9)
+{completion.delimiter}
+...More examples.....
+
+---Real Data---
+Entity types: {entity_types}
+Input:
+{input_text}
+Output:
+```
