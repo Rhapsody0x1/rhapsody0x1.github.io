@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Trial on Rhapsody0x1's Blog</title><link>https://rhapsody0x1.github.io/tags/trial/</link><description>Recent content in Trial on Rhapsody0x1's Blog</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 21 Sep 2025 07:32:00 +0000</lastBuildDate><atom:link href="https://rhapsody0x1.github.io/tags/trial/index.xml" rel="self" type="application/rss+xml"/><item><title>样式测试</title><link>https://rhapsody0x1.github.io/p/style-showcase/</link><pubDate>Sun, 21 Sep 2025 07:32:00 +0000</pubDate><guid>https://rhapsody0x1.github.io/p/style-showcase/</guid><description>&lt;img src="https://rhapsody0x1.github.io/p/style-showcase/cover.jpg" alt="Featured image of post 样式测试" /&gt;&lt;p&gt;这是一篇专门用于验证文章内部各种元素样式的测试文章。&lt;/p&gt;
+&lt;h2 id="标题层级"&gt;&lt;a href="#%e6%a0%87%e9%a2%98%e5%b1%82%e7%ba%a7" class="header-anchor"&gt;&lt;/a&gt;标题层级
+&lt;/h2&gt;&lt;h3 id="h3-标题"&gt;&lt;a href="#h3-%e6%a0%87%e9%a2%98" class="header-anchor"&gt;&lt;/a&gt;H3 标题
+&lt;/h3&gt;&lt;h4 id="h4-标题"&gt;&lt;a href="#h4-%e6%a0%87%e9%a2%98" class="header-anchor"&gt;&lt;/a&gt;H4 标题
+&lt;/h4&gt;&lt;h5 id="h5-标题"&gt;&lt;a href="#h5-%e6%a0%87%e9%a2%98" class="header-anchor"&gt;&lt;/a&gt;H5 标题
+&lt;/h5&gt;&lt;h6 id="h6-标题"&gt;&lt;a href="#h6-%e6%a0%87%e9%a2%98" class="header-anchor"&gt;&lt;/a&gt;H6 标题
+&lt;/h6&gt;&lt;hr&gt;
+&lt;h2 id="引用"&gt;&lt;a href="#%e5%bc%95%e7%94%a8" class="header-anchor"&gt;&lt;/a&gt;引用
+&lt;/h2&gt;&lt;blockquote&gt;
+&lt;p&gt;一段带有多行的引用文字，展示圆角毛玻璃容器的效果。支持链接，比如 &lt;a class="link" href="https://gohugo.io" target="_blank" rel="noopener"
+&gt;Hugo 官网&lt;/a&gt; 以及加粗和斜体。&lt;/p&gt;
+&lt;p&gt;第二段引用，用于测试多段落的间距与排版。&lt;/p&gt;
+&lt;p&gt;&lt;span class="cite"&gt;—— 佚名&lt;/span&gt;&lt;/p&gt;&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;嵌套引用测试：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;这是一个第二层级的引用内容。&lt;/p&gt;&lt;/blockquote&gt;&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h2 id="列表"&gt;&lt;a href="#%e5%88%97%e8%a1%a8" class="header-anchor"&gt;&lt;/a&gt;列表
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;无序列表项 A&lt;/li&gt;
+&lt;li&gt;无序列表项 B
+&lt;ul&gt;
+&lt;li&gt;子项 B-1&lt;/li&gt;
+&lt;li&gt;子项 B-2&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol&gt;
+&lt;li&gt;有序列表项 1&lt;/li&gt;
+&lt;li&gt;有序列表项 2&lt;/li&gt;
+&lt;li&gt;有序列表项 3&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;input disabled="" type="checkbox"&gt; 任务列表（未完成）&lt;/li&gt;
+&lt;li&gt;&lt;input checked="" disabled="" type="checkbox"&gt; 任务列表（已完成）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2 id="表格"&gt;&lt;a href="#%e8%a1%a8%e6%a0%bc" class="header-anchor"&gt;&lt;/a&gt;表格
+&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;模块&lt;/th&gt;
+&lt;th&gt;说明&lt;/th&gt;
+&lt;th&gt;状态&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;标题样式&lt;/td&gt;
+&lt;td&gt;移除左侧强调，优化锚点&lt;/td&gt;
+&lt;td&gt;完成&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;引用样式&lt;/td&gt;
+&lt;td&gt;圆角毛玻璃容器&lt;/td&gt;
+&lt;td&gt;完成&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;表格样式&lt;/td&gt;
+&lt;td&gt;表头渐变、边框增强、无斑马纹&lt;/td&gt;
+&lt;td&gt;完成&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;blockquote&gt;
+&lt;p&gt;下面是一个更宽的表格，测试横向滚动与表头背景：&lt;/p&gt;&lt;/blockquote&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;字段&lt;/th&gt;
+&lt;th&gt;类型&lt;/th&gt;
+&lt;th&gt;必填&lt;/th&gt;
+&lt;th&gt;说明&lt;/th&gt;
+&lt;th&gt;示例&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;id&lt;/td&gt;
+&lt;td&gt;string&lt;/td&gt;
+&lt;td&gt;是&lt;/td&gt;
+&lt;td&gt;唯一标识&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;abc-123&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;title&lt;/td&gt;
+&lt;td&gt;string&lt;/td&gt;
+&lt;td&gt;是&lt;/td&gt;
+&lt;td&gt;标题文本&lt;/td&gt;
+&lt;td&gt;“GraphRAG 指南”&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;created_at&lt;/td&gt;
+&lt;td&gt;datetime&lt;/td&gt;
+&lt;td&gt;是&lt;/td&gt;
+&lt;td&gt;ISO8601 时间&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;2025-09-21T10:00:00Z&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;tags&lt;/td&gt;
+&lt;td&gt;array[string]&lt;/td&gt;
+&lt;td&gt;否&lt;/td&gt;
+&lt;td&gt;标签列表&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;[&amp;quot;Themes&amp;quot;,&amp;quot;CSS&amp;quot;]&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;hr&gt;
+&lt;h2 id="代码与高亮"&gt;&lt;a href="#%e4%bb%a3%e7%a0%81%e4%b8%8e%e9%ab%98%e4%ba%ae" class="header-anchor"&gt;&lt;/a&gt;代码与高亮
+&lt;/h2&gt;&lt;p&gt;行内代码：&lt;code&gt;console.log(&amp;quot;glass&amp;quot;)&lt;/code&gt;。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt; 1
+&lt;/span&gt;&lt;span class="lnt"&gt; 2
+&lt;/span&gt;&lt;span class="lnt"&gt; 3
+&lt;/span&gt;&lt;span class="lnt"&gt; 4
+&lt;/span&gt;&lt;span class="lnt"&gt; 5
+&lt;/span&gt;&lt;span class="lnt"&gt; 6
+&lt;/span&gt;&lt;span class="lnt"&gt; 7
+&lt;/span&gt;&lt;span class="lnt"&gt; 8
+&lt;/span&gt;&lt;span class="lnt"&gt; 9
+&lt;/span&gt;&lt;span class="lnt"&gt;10
+&lt;/span&gt;&lt;span class="lnt"&gt;11
+&lt;/span&gt;&lt;span class="lnt"&gt;12
+&lt;/span&gt;&lt;span class="lnt"&gt;13
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ts" data-lang="ts"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;// TypeScript 示例
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;&lt;/span&gt;&lt;span class="kr"&gt;type&lt;/span&gt; &lt;span class="nx"&gt;Post&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="nx"&gt;id&lt;/span&gt;: &lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="nx"&gt;title&lt;/span&gt;: &lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="nx"&gt;createdAt&lt;/span&gt;: &lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="nx"&gt;tags?&lt;/span&gt;: &lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;[];&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;};&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kr"&gt;const&lt;/span&gt; &lt;span class="nx"&gt;posts&lt;/span&gt;: &lt;span class="kt"&gt;Post&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;title&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;Hello&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;createdAt&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;2025-09-21T10:00:00Z&amp;#34;&lt;/span&gt; &lt;span class="p"&gt;},&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;];&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nx"&gt;console&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;table&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;posts&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;hr&gt;
+&lt;h2 id="图片"&gt;&lt;a href="#%e5%9b%be%e7%89%87" class="header-anchor"&gt;&lt;/a&gt;图片
+&lt;/h2&gt;&lt;p&gt;&lt;img src="https://images.unsplash.com/photo-1756806983725-977bb2308d4e?ixlib=rb-4.1.0&amp;amp;q=85&amp;amp;fm=jpg&amp;amp;crop=entropy&amp;amp;cs=srgb&amp;amp;dl=pawel-czerwinski-uBReUvlYvyY-unsplash.jpg"
+loading="lazy"
+alt="示例图片"
+&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id="数学公式与脚注"&gt;&lt;a href="#%e6%95%b0%e5%ad%a6%e5%85%ac%e5%bc%8f%e4%b8%8e%e8%84%9a%e6%b3%a8" class="header-anchor"&gt;&lt;/a&gt;数学公式与脚注
+&lt;/h2&gt;&lt;p&gt;行内公式 \(E=mc^2\)。&lt;/p&gt;
+&lt;p&gt;块级公式：&lt;/p&gt;
+\[ a^2 + b^2 = c^2 \]&lt;p&gt;这里有一个脚注引用&lt;sup id="fnref:1"&gt;&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref"&gt;1&lt;/a&gt;&lt;/sup&gt;，再来一个脚注&lt;sup id="fnref:2"&gt;&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref"&gt;2&lt;/a&gt;&lt;/sup&gt;。&lt;/p&gt;
+&lt;div class="footnotes" role="doc-endnotes"&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li id="fn:1"&gt;
+&lt;p&gt;这是第一个脚注的内容。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id="fn:2"&gt;
+&lt;p&gt;第二个脚注，用于测试脚注列表的样式。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;</description></item></channel></rss>
