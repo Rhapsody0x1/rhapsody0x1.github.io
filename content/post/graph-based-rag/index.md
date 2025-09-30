@@ -164,14 +164,20 @@ GraphRAG 的论文认为现有的测试集“不适用于**全局感知**任务�
    1. 向 LLM 提供对目标数据集的**高层次描述**及其**用途**。
    
    2. 要求 LLM 根据语料库的描述，生成 $K$ 个可能会使用该数据集的**潜在用户画像**。
+      
+      - 例如，对于播客文稿数据集，一个可能的用户画像是“寻找科技行业见解和趋势的科技记者” 。
    
    3. 针对每一个生成的用户画像，继续要求 LLM 识别出该用户可能会使用这个数据集完成的 $N$ 个相关任务 。
+      
+      - 例如，对于“科技记者”这个用户，一个可能的任务是“了解科技领袖如何看待政策和监管的作用” 。
    
    4. 最后，针对每一个**用户-任务组合**，提示 LLM 生成 $M$ 个高层次问题。这些问题满足：
       
       - 需要对整个语料库有全面的理解才能回答。
       
       - 不能通过检索特定的、低层次的局部事实来回答。
+      
+      - 例如，对于“科技记者”这个用户，一个可能的任务是“了解科技领袖如何看待政策和监管的作用” 。
    
    5. 整理生成的所有问题，最终形成一个包含 $K×N×M$ 个问题的测试集，用于后续评估。
       
@@ -235,6 +241,8 @@ GraphRAG 目前在 GitHub 上还在进行活跃的更新。针对于上面的成
 
 来自香港大学的学者参考了 GraphRAG 采用图结构来存储知识库的思路，**改良**出了另一种基于图的 RAG 方法。其核心目的是解决 GraphRAG 在成本和效率上的短板。它省去了划分社区和生成摘要这两个成本极其高昂的步骤，改为使用一种基于**双层关键词**的范式。
 
+### 那它又是怎么做的？
+
 它和 GraphRAG 一样让 LLM 基于提示词提取实体关系，不过 LightRAG 使用的是一个**三合一**提示词，同时提取**实体**、**关系**和**关键词**。其中的关键词又分为高层关键词和低层关键词。
 
 - 高层关键词概括文本主题；
@@ -277,61 +285,44 @@ Text: (input_text)
 Output:
 ```
 
-这里给出 GraphRAG 的提示词用于对照，其重点在于识别实体和关系：
+还是和传统 RAG 一样，对文本进行分块，然后它的知识库构建过程是这样的：
 
-```markdown
----Goal--
-Given a text document that is potentially relevant to this activity and a list of entity types, identify
-all entities of those types from the text and all relationships among the identified entities.
+1. 还是先提取实体和关系；
 
----Steps--
-1. Identify all entities. For each identified entity, extract the following information:
-entity name: Name of the entity, capitalized
-entity type: One of the following types: [{entity_types})
-entity description: Comprehensive description of the entity's attributes and activities
-Format each entity as ("entity" {tuple delimiter} <entity_name>{tuple_delimiter}<entity_type>{tuple.
-delimiter) <entity_description>
-2. From the entities identified in step 1, identify all pairs of (source entity, target entity) that
-are clearly related to each other
-For each pair of related entities, extract the following information:
-source entity: name of the source entity, as identified in step 1
-target.entity: name of the target entity, as identified in step 1
-relationship.description: explanation as to why you think the source entity and the target entity are
-related to each other
-relationship strength: a numeric score indicating strength of the relationship between the source entity
-and target entity
-Format each relationship as ("relationship"{tuple delimiter}<source_entity>{tuple_delimiter}<target.
-entity>{tuple_delimiter} <relationship.description>{tuple_delimiter} <relationship_strength>)
-3. Return output in English as a single list of all the entities and relationships identified in steps 1
-and 2. Use{record delimiter} as the list delimiter.
-4. When finished, output (completion delimiter}
+2. 调用 LLM 使用上面的三合一 Prompt 为图中的**每一个实体节点**和**每一个关系边**都生成一个文本的“键值对”。
+   
+   - 其中，“键”是用于高效检索的**关键词**，而“值”是一段由 LLM 生成的**总结性报告** (~~和GraphRAG殊途同归了属于是~~)，用于后续的答案生成。
+     
+     - 对于实体节点来说，关键词是低层的；
+     
+     - 对于关系边来说，关键词是高层的。
 
----Examples
-Entity-types: ORGANIZATION, PERSON
-Input:
-The Fed is scheduled to meet on Tuesday and Wednesday, with the central bank planning to release its
-latest policy decision on Wednesday at 2:00 p.m. ET, followed by a press conference where Fed Chair
-Jerome Powell will take questions. Investors expect the Federal Open Market Committee to hold its
-benchmark interest rate steady in a range of 5.25%-5.5%.
-Output:
-("entity" (tuple_delimiter} FED{tuple_delimiter} ORGANIZATION{tuple_delimiter The Fed is the Federal Reserve,
-which is setting interest rates on Tuesday and Wednesday)
-{record_delimiter}
-("entity" (tuple delimiter JEROME POWELL tuple delimiter) PERSON{tuple delimiter) Jerome Powell is the chair
-of the Federal Reserve)
-{record.delimiter}
-("entity" {tuple delimiter) FEDERAL OPEN MARKET COMMITTEE (tuple delimiter) ORGANIZATION tuple delimiter The
-Federal Reserve committee makes key decisions about interest rates and the growth of the United States
-money supply)
-{record delimiter}
-("relationship"  tuple delimiter} JEROME POWELL tuple delimiter} FED{tuple delimiter Jerome Powell is the
-Chair of the Federal Reserve and will answer questions at a press conference  tuple delimiter)9)
-{completion.delimiter}
-...More examples.....
+3. 执行去重，识别和**合并**来自不同文本块的相同实体和关系 。
+   
+   - 目的是通过最小化图的规模来减少图操作的相关开销，从而实现更高效的数据处理 。
 
----Real Data---
-Entity types: {entity_types}
-Input:
-{input_text}
-Output:
-```
+4. 最终被存入数据库的是**知识图谱**本身而非 GraphRAG 一样的各部分社区摘要。
+
+执行询问时，LightRAG 不会和 GraphRAG 一样进行很多次生成，而是执行下面的流程：
+
+1. 从用户问题中**提取**双层关键词；
+   
+   - 低层关键词是指代具体实体、细节的词；
+   
+   - 高层关键词是表示主题、概念的词。
+   
+   - 例如，对于查询“国际贸易如何影响全球经济稳定？”
+     
+     - 高层关键词是“国际贸易”、“全球经济稳定”；
+     
+     - 低层关键词可能是“贸易协定”、“关税”等。
+
+2. 在数据库中按**向量**方法检索关键词对应的关系边和实体节点；
+
+3. 对于找到的节点和边，收集被检索到的节点或边的**一跳相邻节点**；
+
+4. 把这些元素对应的**总结性报告**组装起来放入模型上下文；
+
+5. 由 LLM 以这部分上下文为依据生成最终答案。
+
+然后也是跑一趟微软的**自适应测试集**，在他们的论文里声称分数超过了原本的 GraphRAG 方法。
