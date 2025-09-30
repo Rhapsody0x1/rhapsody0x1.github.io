@@ -1,0 +1,643 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Papers on Rhapsody0x1's Blog</title><link>https://rhapsody0x1.github.io/categories/papers/</link><description>Recent content in Papers on Rhapsody0x1's Blog</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Fri, 26 Sep 2025 17:27:52 +0000</lastBuildDate><atom:link href="https://rhapsody0x1.github.io/categories/papers/index.xml" rel="self" type="application/rss+xml"/><item><title>基于图的各种检索增强生成 (RAG) 方法</title><link>https://rhapsody0x1.github.io/p/graph-based-rag/</link><pubDate>Fri, 26 Sep 2025 17:27:52 +0000</pubDate><guid>https://rhapsody0x1.github.io/p/graph-based-rag/</guid><description>&lt;img src="https://rhapsody0x1.github.io/p/graph-based-rag/cover.jpg" alt="Featured image of post 基于图的各种检索增强生成 (RAG) 方法" /&gt;&lt;p&gt;去年 4 月，微软在 Arxiv 上发表了 GraphRAG 的论文，并在 7 月将有关代码在 GitHub 上&lt;a class="link" href="https://github.com/microsoft/graphrag" target="_blank" rel="noopener"
+&gt;开源&lt;/a&gt;出来，大约在 7 天内就拿到了 6.7k stars。而在今年暑假笔者恰好接触到了一些在实际生产环境中使用 RAG 系统的业务，因此尝试在这里追踪和解读一下基于图的 RAG 方法的学术研究。&lt;/p&gt;
+&lt;h2 id="naiverag"&gt;&lt;a href="#naiverag" class="header-anchor"&gt;&lt;/a&gt;NaiveRAG
+&lt;/h2&gt;&lt;p&gt;通常在各种论文里用 NaiveRAG 或者 BaselineRAG 表示最基础的 RAG 方法。&lt;strong&gt;RAG&lt;/strong&gt; &lt;em&gt;(Retrieval-Augmented Generation, 检索增强生成)&lt;/em&gt; 是一种设法将&lt;strong&gt;与问题相关的&lt;/strong&gt;特定领域知识放入大模型上下文，从而使其能准确回答该领域问题的技术。其优势在于知识库规模不受大模型上下文长度制约，且无需在知识领域发生变化时重新调整模型本身，具有高度&lt;strong&gt;可扩展&lt;/strong&gt;性。&lt;/p&gt;
+&lt;p&gt;好吧，这种定义性文字看着很头疼，所以让我们来换个角度。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;众所周知，大模型在回答专业领域问题时经常会出现&lt;strong&gt;幻觉&lt;/strong&gt;而产生不准确的答案。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;现在，你被安排做一个&lt;strong&gt;专门回答法律领域&lt;/strong&gt;相关问题的聊天机器人。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;如果机器人回答出错，你可能会&lt;strong&gt;被甲方青蒜&lt;/strong&gt;。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;你想到可以简单地把法律条文一股脑塞进问答的提示词 (Prompts) 里。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;但一番尝试后你发现这根本行不通：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;法律条文太多，大模型上下文不够用；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;就算够用，大模型的指令遵循等能力也会&lt;strong&gt;明显下降&lt;/strong&gt;。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;你突然想到了平时使用的联网搜索功能，用联网搜索能解决这个问题吗？&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;甲方告诉你他们还有一些网上搜不到的&lt;strong&gt;内部&lt;/strong&gt;文档，联网搜索也搞不定了。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;那能不能在本地想办法构建一个“法律知识库”呢？&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;你试着把法律文档全部放到一起组成一个&lt;strong&gt;数据库&lt;/strong&gt;。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;然后你开始研究如何让大模型在回答问题前从数据库里&lt;strong&gt;搜索&lt;/strong&gt;知识。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;恭喜你，你发明了最简单的检索增强生成方法——NaiveRAG。把过程分解成两步就是下面这样。&lt;/p&gt;
+&lt;p&gt;这是用文档建立知识库的流程：
+&lt;script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"&gt;&lt;/script&gt;
+&lt;div data-mermaid-container style="border-radius: var(--card-border-radius);"&gt;
+&lt;/div&gt;
+&lt;script type="text/template" data-mermaid-source&gt;
+graph TD;
+subgraph 构建知识库
+A(原始文档) --&gt; B[文档分块];
+B --&gt; C[嵌入知识块];
+C --&gt; D[存入数据库];
+D --&gt; E(建立索引);
+end
+&lt;/script&gt;
+&lt;script&gt;
+(function () {
+const currentScript = document.currentScript;
+if (!currentScript) return;
+const templateEl = currentScript.previousElementSibling;
+const container = templateEl &amp;&amp; templateEl.hasAttribute('data-mermaid-source')
+? templateEl.previousElementSibling
+: null;
+if (!container) return;
+const source = templateEl &amp;&amp; templateEl.hasAttribute('data-mermaid-source') ? templateEl.textContent : '';
+function getThemeFromDataset() {
+return (document.documentElement.dataset.scheme === 'dark') ? 'dark' : 'default';
+}
+let mermaidTheme = getThemeFromDataset();
+let mermaidConfig = {
+theme: mermaidTheme,
+logLevel: 'fatal',
+securityLevel: 'strict',
+startOnLoad: false,
+arrowMarkerAbsolute: false,
+er: {
+diagramPadding: 20,
+layoutDirection: 'TB',
+minEntityWidth: 100,
+minEntityHeight: 75,
+entityPadding: 15,
+stroke: 'gray',
+fill: 'honeydew',
+fontSize: 12,
+useMaxWidth: true,
+},
+flowchart: {
+diagramPadding: 8,
+htmlLabels: true,
+curve: 'basis',
+},
+sequence: {
+diagramMarginX: 50,
+diagramMarginY: 10,
+actorMargin: 50,
+width: 150,
+height: 65,
+boxMargin: 10,
+boxTextMargin: 5,
+noteMargin: 10,
+messageMargin: 35,
+messageAlign: 'center',
+mirrorActors: true,
+bottomMarginAdj: 1,
+useMaxWidth: true,
+rightAngles: false,
+showSequenceNumbers: false,
+},
+gantt: {
+titleTopMargin: 25,
+barHeight: 20,
+barGap: 4,
+topPadding: 50,
+leftPadding: 75,
+gridLineStartPadding: 35,
+fontSize: 11,
+fontFamily: '"Open-Sans", "sans-serif"',
+numberSectionStyles: 4,
+axisFormat: '%Y-%m-%d',
+topAxis: false,
+},
+};
+function renderMermaid() {
+if (!container || !source || !window.mermaid) return;
+mermaid.initialize(mermaidConfig);
+container.classList.add('mermaid');
+container.removeAttribute('data-processed');
+container.innerHTML = source;
+mermaid.init(undefined, container);
+}
+renderMermaid();
+window.addEventListener('onColorSchemeChange', (e) =&gt; {
+mermaidConfig.theme = (e &amp;&amp; e.detail === 'dark') ? 'dark' : 'default';
+renderMermaid();
+});
+})();
+&lt;/script&gt;&lt;/p&gt;
+&lt;p&gt;这是使用知识库来做回答的流程：
+&lt;script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"&gt;&lt;/script&gt;
+&lt;div data-mermaid-container style="border-radius: var(--card-border-radius);"&gt;
+&lt;/div&gt;
+&lt;script type="text/template" data-mermaid-source&gt;
+graph TD;
+subgraph 回答生成
+F(用户问题) --&gt; G[寻找知识];
+E[数据库] -- 检索 --&gt; G;
+G --&gt; H[返回的知识块];
+F --&gt; I[放入上下文];
+H --&gt; I;
+I --&gt; J[生成回答];
+J --&gt; K(最终答案);
+end
+&lt;/script&gt;
+&lt;script&gt;
+(function () {
+const currentScript = document.currentScript;
+if (!currentScript) return;
+const templateEl = currentScript.previousElementSibling;
+const container = templateEl &amp;&amp; templateEl.hasAttribute('data-mermaid-source')
+? templateEl.previousElementSibling
+: null;
+if (!container) return;
+const source = templateEl &amp;&amp; templateEl.hasAttribute('data-mermaid-source') ? templateEl.textContent : '';
+function getThemeFromDataset() {
+return (document.documentElement.dataset.scheme === 'dark') ? 'dark' : 'default';
+}
+let mermaidTheme = getThemeFromDataset();
+let mermaidConfig = {
+theme: mermaidTheme,
+logLevel: 'fatal',
+securityLevel: 'strict',
+startOnLoad: false,
+arrowMarkerAbsolute: false,
+er: {
+diagramPadding: 20,
+layoutDirection: 'TB',
+minEntityWidth: 100,
+minEntityHeight: 75,
+entityPadding: 15,
+stroke: 'gray',
+fill: 'honeydew',
+fontSize: 12,
+useMaxWidth: true,
+},
+flowchart: {
+diagramPadding: 8,
+htmlLabels: true,
+curve: 'basis',
+},
+sequence: {
+diagramMarginX: 50,
+diagramMarginY: 10,
+actorMargin: 50,
+width: 150,
+height: 65,
+boxMargin: 10,
+boxTextMargin: 5,
+noteMargin: 10,
+messageMargin: 35,
+messageAlign: 'center',
+mirrorActors: true,
+bottomMarginAdj: 1,
+useMaxWidth: true,
+rightAngles: false,
+showSequenceNumbers: false,
+},
+gantt: {
+titleTopMargin: 25,
+barHeight: 20,
+barGap: 4,
+topPadding: 50,
+leftPadding: 75,
+gridLineStartPadding: 35,
+fontSize: 11,
+fontFamily: '"Open-Sans", "sans-serif"',
+numberSectionStyles: 4,
+axisFormat: '%Y-%m-%d',
+topAxis: false,
+},
+};
+function renderMermaid() {
+if (!container || !source || !window.mermaid) return;
+mermaid.initialize(mermaidConfig);
+container.classList.add('mermaid');
+container.removeAttribute('data-processed');
+container.innerHTML = source;
+mermaid.init(undefined, container);
+}
+renderMermaid();
+window.addEventListener('onColorSchemeChange', (e) =&gt; {
+mermaidConfig.theme = (e &amp;&amp; e.detail === 'dark') ? 'dark' : 'default';
+renderMermaid();
+});
+})();
+&lt;/script&gt;&lt;/p&gt;
+&lt;p&gt;网上有很多传统 RAG 方法的资料，包括怎么做嵌入，怎么做向量搜索，以后笔者可能会再单独写一篇文章聊 NaiveRAG，这里就先不赘述了。&lt;/p&gt;
+&lt;h2 id="graphrag"&gt;&lt;a href="#graphrag" class="header-anchor"&gt;&lt;/a&gt;GraphRAG
+&lt;/h2&gt;&lt;p&gt;原论文的 &lt;a class="link" href="https://arxiv.org/pdf/2404.16130" target="_blank" rel="noopener"
+&gt;Arxiv 链接&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;GraphRAG 是微软开源的一套基于图结构的 RAG 方法。&lt;a class="link" href="https://microsoft.github.io/graphrag" target="_blank" rel="noopener"
+&gt;微软官方&lt;/a&gt;的说法：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;GraphRAG is a structured, hierarchical approach to Retrieval Augmented Generation (RAG), as opposed to naive semantic-search approaches using plain text snippets. The GraphRAG process involves extracting a knowledge graph out of raw text, building a community hierarchy, generating summaries for these communities, and then leveraging these structures when perform RAG-based tasks.&lt;/p&gt;&lt;/blockquote&gt;
+&lt;p&gt;简单来说，它通过从文档中提取出“知识图谱”，并采用算法划分为社群，调用 LLM 为每个社群生成一份总结，在回答问题时分别在这些社群上生成一份答案，最终再使用 LLM 在这些回答的基础上生成最终答案。&lt;/p&gt;
+&lt;h3 id="为什么要这么做"&gt;&lt;a href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e8%a6%81%e8%bf%99%e4%b9%88%e5%81%9a" class="header-anchor"&gt;&lt;/a&gt;为什么要这么做？
+&lt;/h3&gt;&lt;p&gt;在解释为什么要使用 GraphRAG 之前，我们可以先仔细审视传统 RAG 采用的方法，看看它有什么缺陷。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;方法&lt;/th&gt;
+&lt;th&gt;缺陷&lt;/th&gt;
+&lt;th&gt;改进&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;对文本进行分块后嵌入&lt;/td&gt;
+&lt;td&gt;知识被切断，导致文本块不能表示完整信息&lt;/td&gt;
+&lt;td&gt;适应文档的分块方法，如分隔符（对法律条文），或引入 LLM&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;采用向量化方法进行嵌入和匹配&lt;/td&gt;
+&lt;td&gt;对“关键词”的匹配能力非常弱&lt;/td&gt;
+&lt;td&gt;使用“混合检索”策略，即关键词相似度和向量相似度进行加权&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;基于相似度分数排序文本块&lt;/td&gt;
+&lt;td&gt;相似度得分无法完全表示和问题的相关程度&lt;/td&gt;
+&lt;td&gt;引入重排序模型 (Reranker)，代价是检索速度会明显变慢&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;直接用问题文本匹配文本块&lt;/td&gt;
+&lt;td&gt;多轮对话中由于代词等原因，召回率显著降低&lt;/td&gt;
+&lt;td&gt;利用 LLM 等进行查询重写，即构造出更容易检索知识的提问&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;而 GraphRAG 指向了传统 RAG 的一个顽固问题：&lt;strong&gt;无法&lt;/strong&gt;有效利用所有知识块，导致无法回答&lt;strong&gt;全局性&lt;/strong&gt;的问题，例如“这些文档的主题是什么？”，传统 RAG 使用这个提问很难找到有效的知识块，因此也就很难合理地回答这个问题。&lt;/p&gt;
+&lt;p&gt;为了让大模型回答时能使用所有文本块提高的知识，提高答案的&lt;strong&gt;全面性&lt;/strong&gt;，微软提出了 GraphRAG 的方法。&lt;/p&gt;
+&lt;h3 id="那它是怎么做的"&gt;&lt;a href="#%e9%82%a3%e5%ae%83%e6%98%af%e6%80%8e%e4%b9%88%e5%81%9a%e7%9a%84" class="header-anchor"&gt;&lt;/a&gt;那它是怎么做的？
+&lt;/h3&gt;&lt;p&gt;GraphRAG 和传统 RAG 一样先采用&lt;strong&gt;固定长度&lt;/strong&gt;分块法切分文本，然后按照下面的流程构建它的数据库：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;调用 LLM 为每个文本块提取&lt;strong&gt;实体&lt;/strong&gt;和&lt;strong&gt;关系&lt;/strong&gt;；&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;例如：“库克在2025年发布了iPhone 17。”&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;实体：“库克”、“iPhone 17”&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;关系：“发布”&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;通过&lt;strong&gt;所有&lt;/strong&gt;的实体和关系构建一个&lt;strong&gt;图&lt;/strong&gt;；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;在这个图上运行 Leiden &lt;strong&gt;社区&lt;/strong&gt;发现算法；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;调用 LLM 为&lt;strong&gt;每个&lt;/strong&gt;社区生成一份&lt;strong&gt;摘要&lt;/strong&gt;；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;将所有&lt;strong&gt;社区摘要&lt;/strong&gt;存储作为数据库，这是将来用于检索的数据。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;执行询问时，其使用一个 &lt;strong&gt;Map-Reduce&lt;/strong&gt; 流程：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;先在&lt;strong&gt;每个&lt;/strong&gt;社区摘要上并行地为问题生成一个答案；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;LLM 回答问题时会给出一个&lt;strong&gt;帮助性&lt;/strong&gt;分数；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;将帮助性分数&lt;strong&gt;最高&lt;/strong&gt;的一些答案合并起来送入 LLM 上下文；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;由 LLM 在此基础上生成一个最终的答案。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;总之它在构建知识库和回答问题的过程中都反复多次地调用 LLM 来处理数据，在它自己的 Benchmark，也就是“自适应测试集”评测下，微软认为这套方法明显地提高了 RAG 方法的&lt;strong&gt;全局感知&lt;/strong&gt;能力。&lt;/p&gt;
+&lt;h3 id="有什么问题"&gt;&lt;a href="#%e6%9c%89%e4%bb%80%e4%b9%88%e9%97%ae%e9%a2%98" class="header-anchor"&gt;&lt;/a&gt;有什么问题？
+&lt;/h3&gt;&lt;h4 id="成本"&gt;&lt;a href="#%e6%88%90%e6%9c%ac" class="header-anchor"&gt;&lt;/a&gt;成本
+&lt;/h4&gt;&lt;p&gt;笔者认为这套系统目前最显著的问题就是&lt;strong&gt;成本已经高昂到无法接受的地步&lt;/strong&gt;。参考下面的B站视频：&lt;/p&gt;
+&lt;div class="video-wrapper"&gt;
+&lt;iframe src="https://player.bilibili.com/player.html?as_wide=1&amp;amp;high_quality=1&amp;amp;page=1&amp;bvid=BV1dZ421K7sz"
+scrolling="no"
+frameborder="no"
+framespacing="0"
+allowfullscreen="true"
+&gt;
+&lt;/iframe&gt;
+&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;使用云端 API，完整构建《圣诞颂歌》（约200页）的索引，回答“这个故事的主旨是什么”，总消费 &lt;strong&gt;11 美元&lt;/strong&gt;。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;请求了 &lt;strong&gt;449&lt;/strong&gt; 次 GPT-4 的 API，成本相对较低的嵌入模型仅调用了 &lt;strong&gt;19&lt;/strong&gt; 次。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;另外，根据笔者的经验，使用诸如轨迹流动这样的 API 平台可能还会严重地受到 &lt;strong&gt;Rate Limit&lt;/strong&gt; 的限制。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;使用本地大模型，提取实体构建索引的时间&lt;strong&gt;极长&lt;/strong&gt;。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;由于本地模型的性能限制，其可能&lt;strong&gt;无法&lt;/strong&gt;输出正确的 JSON 格式结果导致嵌入过程失败。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;另外，花费了如此庞大的代价构建索引后，如果还想加入新的文档，必须&lt;strong&gt;从头开始&lt;/strong&gt;所有的嵌入过程。这在生产环境下几乎是不可接受的。&lt;/p&gt;
+&lt;p&gt;以上的原因直接导致了 GraphRAG 难以投入实际生产使用。&lt;/p&gt;
+&lt;h4 id="数据集"&gt;&lt;a href="#%e6%95%b0%e6%8d%ae%e9%9b%86" class="header-anchor"&gt;&lt;/a&gt;数据集
+&lt;/h4&gt;&lt;p&gt;GraphRAG 的论文认为现有的测试集“不适用于&lt;strong&gt;全局感知&lt;/strong&gt;任务评估”，因此&lt;strong&gt;完全没有&lt;/strong&gt;在传统 RAG 使用的测试集上进行测试，而是自己设计了所谓的“自适应测试集”方法 (原文 Algorithm 1)：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;生成全局性的问题：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;向 LLM 提供对目标数据集的&lt;strong&gt;高层次描述&lt;/strong&gt;及其&lt;strong&gt;用途&lt;/strong&gt;。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;要求 LLM 根据语料库的描述，生成 $K$ 个可能会使用该数据集的&lt;strong&gt;潜在用户画像&lt;/strong&gt;。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;例如，对于播客文稿数据集，一个可能的用户画像是“寻找科技行业见解和趋势的科技记者” 。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;针对每一个生成的用户画像，继续要求 LLM 识别出该用户可能会使用这个数据集完成的 $N$ 个相关任务 。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;例如，对于“科技记者”这个用户，一个可能的任务是“了解科技领袖如何看待政策和监管的作用” 。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;最后，针对每一个&lt;strong&gt;用户-任务组合&lt;/strong&gt;，提示 LLM 生成 $M$ 个高层次问题。这些问题满足：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;需要对整个语料库有全面的理解才能回答。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;不能通过检索特定的、低层次的局部事实来回答。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;例如，对于“科技记者”这个用户，一个可能的任务是“了解科技领袖如何看待政策和监管的作用” 。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;整理生成的所有问题，最终形成一个包含 $K×N×M$ 个问题的测试集，用于后续评估。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;在论文的实验中，研究人员设定 $K、N、M$ 均为 5，每个数据集共生成 125 个测试问题。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;评估生成的答案：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;将测试集中的问题分别输入到 GraphRAG 和传统 RAG 系统中，获取答案。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;将&lt;strong&gt;同一个&lt;/strong&gt;问题和两个系统生成的答案同时提供给一个作为&lt;strong&gt;裁判&lt;/strong&gt;的 LLM。即典型的 LLM-as-a-Judge 方法。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;提示评估者 LLM 根据预设的评估标准，判断出赢家，或者平局。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;记录胜负评估结果以及 LLM 给出的评判理由。为了保证结果的稳定性，每次比较都会重复多次并取平均值。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;评估使用的 Prompt 如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt; 1
+&lt;/span&gt;&lt;span class="lnt"&gt; 2
+&lt;/span&gt;&lt;span class="lnt"&gt; 3
+&lt;/span&gt;&lt;span class="lnt"&gt; 4
+&lt;/span&gt;&lt;span class="lnt"&gt; 5
+&lt;/span&gt;&lt;span class="lnt"&gt; 6
+&lt;/span&gt;&lt;span class="lnt"&gt; 7
+&lt;/span&gt;&lt;span class="lnt"&gt; 8
+&lt;/span&gt;&lt;span class="lnt"&gt; 9
+&lt;/span&gt;&lt;span class="lnt"&gt;10
+&lt;/span&gt;&lt;span class="lnt"&gt;11
+&lt;/span&gt;&lt;span class="lnt"&gt;12
+&lt;/span&gt;&lt;span class="lnt"&gt;13
+&lt;/span&gt;&lt;span class="lnt"&gt;14
+&lt;/span&gt;&lt;span class="lnt"&gt;15
+&lt;/span&gt;&lt;span class="lnt"&gt;16
+&lt;/span&gt;&lt;span class="lnt"&gt;17
+&lt;/span&gt;&lt;span class="lnt"&gt;18
+&lt;/span&gt;&lt;span class="lnt"&gt;19
+&lt;/span&gt;&lt;span class="lnt"&gt;20
+&lt;/span&gt;&lt;span class="lnt"&gt;21
+&lt;/span&gt;&lt;span class="lnt"&gt;22
+&lt;/span&gt;&lt;span class="lnt"&gt;23
+&lt;/span&gt;&lt;span class="lnt"&gt;24
+&lt;/span&gt;&lt;span class="lnt"&gt;25
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-markdown" data-lang="markdown"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;---Role---
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;You are a helpful assistant responsible for grading two answers to a question that are provided by two
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;different people.
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;---Goal---
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Given a question and two answers (Answer 1 and Answer 2), assess which answer is better according to
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;the following measure:
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;{criteria}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Your assessment should include two parts:
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;-&lt;/span&gt; Winner: either 1 (if Answer 1 is better) and 2 (if Answer 2 is better) or 0 if they are fundamentally
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;similar and the differences are immaterial.
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;-&lt;/span&gt; Reasoning: a short explanation of why you chose the winner with respect to the measure described above.
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Format your response as a JSON object with the following structure:
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;{{
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&amp;#34;winner&amp;#34;: &amp;lt;1, 2, or 0&amp;gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&amp;#34;reasoning&amp;#34;: &amp;#34;Answer 1 is better because &amp;lt;your reasoning&amp;gt;.&amp;#34;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;---Question---
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;{question}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;---Answer 1---
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;{answer1}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;---Answer 2---
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;{answer2}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Assess which answer is better according to the following measure:
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;{criteria}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Output:
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;其中的 &lt;code&gt;{criteria}&lt;/code&gt; 部分内容如下，可以明显看出其对“全面性”的偏好性：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Comprehensiveness.&lt;/strong&gt; How much detail does the answer provide to &lt;u&gt;cover all aspects&lt;/u&gt; and details of the question?&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Diversity.&lt;/strong&gt; How varied and rich is the answer in providing &lt;u&gt;different perspectives&lt;/u&gt; and insights on the question?&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Empowerment.&lt;/strong&gt; How well does the answer help the reader understand and make informed judgments about the topic?&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;笔者认为，这一测试方法有明显的&lt;strong&gt;先射箭再画靶子&lt;/strong&gt;的嫌疑。从目标 (提高回答全面性) 到测试集 (针对性的全局性提问) 到评估指标 (LLM裁判指标) 都是 GraphRAG 方法的“优势区间”。&lt;del&gt;说白了就是既当运动员又当裁判。&lt;/del&gt;&lt;/p&gt;
+&lt;p&gt;而且，仅在它的数据集上领先无法证明 GraphRAG 具有泛用性。&lt;/p&gt;
+&lt;h3 id="一些缓解办法"&gt;&lt;a href="#%e4%b8%80%e4%ba%9b%e7%bc%93%e8%a7%a3%e5%8a%9e%e6%b3%95" class="header-anchor"&gt;&lt;/a&gt;一些缓解办法
+&lt;/h3&gt;&lt;p&gt;GraphRAG 目前在 GitHub 上还在进行活跃的更新。针对于上面的成本问题微软又提出了 LazyGraphRAG，不过笔者还没有仔细研究。&lt;/p&gt;
+&lt;h2 id="lightrag"&gt;&lt;a href="#lightrag" class="header-anchor"&gt;&lt;/a&gt;LightRAG
+&lt;/h2&gt;&lt;p&gt;来自香港大学的学者参考了 GraphRAG 采用图结构来存储知识库的思路，&lt;strong&gt;改良&lt;/strong&gt;出了另一种基于图的 RAG 方法。其核心目的是解决 GraphRAG 在成本和效率上的短板。它省去了划分社区和生成摘要这两个成本极其高昂的步骤，改为使用一种基于&lt;strong&gt;双层关键词&lt;/strong&gt;的范式。&lt;/p&gt;
+&lt;h3 id="那它又是怎么做的"&gt;&lt;a href="#%e9%82%a3%e5%ae%83%e5%8f%88%e6%98%af%e6%80%8e%e4%b9%88%e5%81%9a%e7%9a%84" class="header-anchor"&gt;&lt;/a&gt;那它又是怎么做的？
+&lt;/h3&gt;&lt;p&gt;它和 GraphRAG 一样让 LLM 基于提示词提取实体关系，不过 LightRAG 使用的是一个&lt;strong&gt;三合一&lt;/strong&gt;提示词，同时提取&lt;strong&gt;实体&lt;/strong&gt;、&lt;strong&gt;关系&lt;/strong&gt;和&lt;strong&gt;关键词&lt;/strong&gt;。其中的关键词又分为高层关键词和低层关键词。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;高层关键词概括文本主题；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;低层关键词概括实体关系。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt; 1
+&lt;/span&gt;&lt;span class="lnt"&gt; 2
+&lt;/span&gt;&lt;span class="lnt"&gt; 3
+&lt;/span&gt;&lt;span class="lnt"&gt; 4
+&lt;/span&gt;&lt;span class="lnt"&gt; 5
+&lt;/span&gt;&lt;span class="lnt"&gt; 6
+&lt;/span&gt;&lt;span class="lnt"&gt; 7
+&lt;/span&gt;&lt;span class="lnt"&gt; 8
+&lt;/span&gt;&lt;span class="lnt"&gt; 9
+&lt;/span&gt;&lt;span class="lnt"&gt;10
+&lt;/span&gt;&lt;span class="lnt"&gt;11
+&lt;/span&gt;&lt;span class="lnt"&gt;12
+&lt;/span&gt;&lt;span class="lnt"&gt;13
+&lt;/span&gt;&lt;span class="lnt"&gt;14
+&lt;/span&gt;&lt;span class="lnt"&gt;15
+&lt;/span&gt;&lt;span class="lnt"&gt;16
+&lt;/span&gt;&lt;span class="lnt"&gt;17
+&lt;/span&gt;&lt;span class="lnt"&gt;18
+&lt;/span&gt;&lt;span class="lnt"&gt;19
+&lt;/span&gt;&lt;span class="lnt"&gt;20
+&lt;/span&gt;&lt;span class="lnt"&gt;21
+&lt;/span&gt;&lt;span class="lnt"&gt;22
+&lt;/span&gt;&lt;span class="lnt"&gt;23
+&lt;/span&gt;&lt;span class="lnt"&gt;24
+&lt;/span&gt;&lt;span class="lnt"&gt;25
+&lt;/span&gt;&lt;span class="lnt"&gt;26
+&lt;/span&gt;&lt;span class="lnt"&gt;27
+&lt;/span&gt;&lt;span class="lnt"&gt;28
+&lt;/span&gt;&lt;span class="lnt"&gt;29
+&lt;/span&gt;&lt;span class="lnt"&gt;30
+&lt;/span&gt;&lt;span class="lnt"&gt;31
+&lt;/span&gt;&lt;span class="lnt"&gt;32
+&lt;/span&gt;&lt;span class="lnt"&gt;33
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-markdown" data-lang="markdown"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;-Goal-
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Given a text document that is potentially relevant to this activity and a list of entity types, identify all entities of those types from the text and all relationships among the
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;identified entities.
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;-Steps-
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;1.&lt;/span&gt; Identify all entities. For each identified entity, extract the following information:
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;-&lt;/span&gt; entity_name: Name of the entity, capitalized
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;-&lt;/span&gt; entity_type: One of the following types: [organization, person, geo, event]
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;-&lt;/span&gt; entity_description: Comprehensive description of the entity&amp;#39;s attributes and activities
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Format each entity as (&amp;#34;entity&amp;#34;&amp;lt;/&amp;gt;&amp;lt;entity_name&amp;gt;&amp;lt;&amp;gt;&amp;lt;entity_type&amp;gt;&amp;lt;/&amp;gt;&amp;lt;entity_description&amp;gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;2.&lt;/span&gt; From the entities identified in step 1, identify all pairs of (source_entity, target_entity) that are &amp;#34;clearly related&amp;#34; to each other.
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;For each pair of related entities, extract the following information:
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;-&lt;/span&gt; source_entity: name of the source entity, as identified in step 1
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;-&lt;/span&gt; target_entity: name of the target entity, as identified in step 1
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;-&lt;/span&gt; relationship_description: explanation as to why you think the source entity and the target entity are related to each other
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;-&lt;/span&gt; relationship_strength: a numeric score indicating strength of the relationship between the source entity and target entity
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;-&lt;/span&gt; relationship_keywords: one or more high-level key words that summarize the overarching nature of the relationship, focusing on concepts or themes rather than
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;specific details
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Format each relationship as (&amp;#34;relationship&amp;#34;&amp;lt;&amp;gt;&amp;lt;source_entity&amp;gt;&amp;lt;/&amp;gt;&amp;lt;target_entity&amp;gt;&amp;lt;&amp;gt;&amp;lt;relationship_description&amp;gt;&amp;lt;&amp;gt;&amp;lt;relationship_keywords&amp;gt;&amp;lt;&amp;gt;&amp;lt;relationship_strength&amp;gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;3.&lt;/span&gt; Identify high-level key words that summarize the main concepts, themes, or topics of the entire text. These should capture the overarching ideas present
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;in the document.
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Format the content-level key words as (&amp;#34;content_keywords&amp;#34;&amp;lt;&amp;gt;&amp;lt;high_level_keywords&amp;gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;4.&lt;/span&gt; Return output in English as a single list of all the entities and relationships identified in steps 1 and 2. Use &amp;#34;##&amp;#34; as the list delimiter.
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;5.&lt;/span&gt; When finished, output &amp;lt;COMPLETE&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;-Real Data-
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Entity_types: (entity_types)
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Text: (input_text)
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Output:
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;还是和传统 RAG 一样，对文本进行分块，然后它的知识库构建过程是这样的：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;还是先提取实体和关系；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;调用 LLM 使用上面的三合一 Prompt 为图中的&lt;strong&gt;每一个实体节点&lt;/strong&gt;和&lt;strong&gt;每一个关系边&lt;/strong&gt;都生成一个文本的“键值对”。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;其中，“键”是用于高效检索的&lt;strong&gt;关键词&lt;/strong&gt;，而“值”是一段由 LLM 生成的&lt;strong&gt;总结性报告&lt;/strong&gt; (&lt;del&gt;和GraphRAG殊途同归了属于是&lt;/del&gt;)，用于后续的答案生成。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;对于实体节点来说，关键词是低层的；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;对于关系边来说，关键词是高层的。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;执行去重，识别和&lt;strong&gt;合并&lt;/strong&gt;来自不同文本块的相同实体和关系 。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;目的是通过最小化图的规模来减少图操作的相关开销，从而实现更高效的数据处理 。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;最终被存入数据库的是&lt;strong&gt;知识图谱&lt;/strong&gt;本身而非 GraphRAG 一样的各部分社区摘要。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;执行询问时，LightRAG 不会和 GraphRAG 一样进行很多次生成，而是执行下面的流程：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;从用户问题中&lt;strong&gt;提取&lt;/strong&gt;双层关键词；&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;低层关键词是指代具体实体、细节的词；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;高层关键词是表示主题、概念的词。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;例如，对于查询“国际贸易如何影响全球经济稳定？”&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;高层关键词是“国际贸易”、“全球经济稳定”；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;低层关键词可能是“贸易协定”、“关税”等。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;在数据库中按&lt;strong&gt;向量&lt;/strong&gt;方法检索关键词对应的关系边和实体节点；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;对于找到的节点和边，收集被检索到的节点或边的&lt;strong&gt;一跳相邻节点&lt;/strong&gt;；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;把这些元素对应的&lt;strong&gt;总结性报告&lt;/strong&gt;组装起来放入模型上下文；&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;由 LLM 以这部分上下文为依据生成最终答案。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;然后也是跑一趟微软的&lt;strong&gt;自适应测试集&lt;/strong&gt;，在他们的论文里声称分数超过了原本的 GraphRAG 方法。&lt;/p&gt;</description></item></channel></rss>
