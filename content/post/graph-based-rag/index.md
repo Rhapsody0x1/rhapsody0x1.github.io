@@ -2,7 +2,7 @@
 title: 基于图的各种检索增强生成 (RAG) 方法
 description: GraphRAG、LightRAG 和 HyperGraphRAG
 slug: graph-based-rag
-date: 2025-09-26 17:27:52+0000
+date: 2025-10-13 13:27:03+0000
 image: cover.jpg
 categories:
     - Papers
@@ -326,3 +326,9 @@ Output:
 5. 由 LLM 以这部分上下文为依据生成最终答案。
 
 然后也是跑一趟微软的**自适应测试集**，在他们的论文里声称分数超过了原本的 GraphRAG 方法。
+
+### 那这么做有什么好处？
+
+笔者目前还没有非常仔细地研究过 LightRAG 的论文，不过根据之前的实践经验来看，它确实比 GraphRAG 的成本**更低**，但主要并不是体现在嵌入阶段，而是其提问阶段时**不必**和后者的 Map-Reduce 一样要求进行很多次生成。
+
+另外，笔者推测，由于其保留了向量检索和原始文本块，它在涉及具体细节的问答上表现应该会优于 GraphRAG。
