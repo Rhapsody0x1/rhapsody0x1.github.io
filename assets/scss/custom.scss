@@ -49,8 +49,13 @@ html {
 
 
 .article-list article:nth-child(n) .article-category a {
-    background: #4076c1 !important;
-    color: #fff;
+    background: rgba(27, 54, 93, 0.18) !important;
+    color: var(--accent-color) !important;
+}
+
+[data-scheme="dark"] .article-list article:nth-child(n) .article-category a {
+    background: rgba(160, 185, 230, 0.18) !important;
+    color: var(--accent-color) !important;
 }
 
 .site-avatar {
@@ -65,25 +70,43 @@ html {
 
 .article-category a,
 .article-tags a {
-    background-color: #4076c1 !important;
-    color: #fff;
+    background-color: rgba(27, 54, 93, 0.18) !important;
+    color: var(--accent-color) !important;
+    border-radius: 8px !important;
+    padding: 6px 14px !important;
+    font-weight: 500;
+    border: 1px solid rgba(27, 54, 93, 0.12);
 }
 
-/* giscus 评论主题适配 */
+[data-scheme="dark"] .article-category a,
+[data-scheme="dark"] .article-tags a {
+    background-color: rgba(160, 185, 230, 0.18) !important;
+    color: var(--accent-color) !important;
+    border-color: rgba(160, 185, 230, 0.12);
+}
+
 .giscus {
-    background-color: rgba(255, 255, 255, 0.38);
-    -webkit-backdrop-filter: blur(16px) saturate(140%);
-    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
     border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
     padding: 12px;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.35) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.50);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.7),
+        inset 1px 0 0 0 rgba(255, 255, 255, 0.4),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.04);
 }
 
-/* 暗色模式下的容器滤镜强度和背景色微调 */
 [data-scheme="dark"] .giscus {
-    background-color: rgba(11, 14, 23, 0);
-    border-color: rgba(255, 255, 255, 0.05);
-    -webkit-backdrop-filter: blur(16px) saturate(60%);
-    backdrop-filter: blur(16px) saturate(60%);
+    background: linear-gradient(160deg, rgba(50, 50, 55, 0.55) 0%, rgba(30, 30, 35, 0.40) 100%);
+    border-color: rgba(255, 255, 255, 0.12);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
+        inset 1px 0 0 0 rgba(255, 255, 255, 0.08),
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.15);
 }
