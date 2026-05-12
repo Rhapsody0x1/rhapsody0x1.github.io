@@ -3,7 +3,7 @@ title: Java 期末速通手册
 description: 尝试拯救 WHUer 的 Java 期末考试
 slug: java-speedrun-doc
 date: 2026-01-08 13:18:03+0000
-image: cover.png
+image: cover.jpg
 categories:
     - Learning
 tags:
