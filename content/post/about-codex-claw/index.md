@@ -5,11 +5,11 @@ slug: about-codex-claw
 date: 2026-05-12 11:29:06+0000
 image: cover.jpg
 categories:
-    - Blog
+  - Blog
 tags:
-    - Vibe Coding
-    - Agent
-    - Codex
+  - Vibe Coding
+  - Agent
+  - Codex
 weight: 1
 ---
 
@@ -25,12 +25,12 @@ weight: 1
 - 你很难知道到底是 LLM 提供商抽风了还是 OpenClaw 抽风了；
 - 你不知道 OpenClaw 会不会趁你不注意就给你来个 `sudo rm -rf *`;
 - 抛开连接 IM 平台的功能不谈，笔者没有感觉到这玩意比 Claude Code 或者 Codex 更好；
-    - 记忆功能事实上也做得很烂；
-    - Skill 也不是什么原创的东西，一个相同的 Skill 在后两者上很可能表现得更好；
+  - 记忆功能事实上也做得很烂；
+  - Skill 也不是什么原创的东西，一个相同的 Skill 在后两者上很可能表现得更好；
 - OpenClaw 真的非常烧 token，笔者用不起；
-    - Peter 能做出这个大概是他有量大管饱的 Claude Max 用，笔者实名羡慕 : (
+  - Peter 能做出这个大概是他有量大管饱的 Claude Max 用，笔者实名羡慕 : (
 - 最重要的一点，OpenClaw 作为一个具有**极高权限**的 Agent，它实际工作的代码/逻辑已经没有人类能搞得懂了；
-    - 事实上它现在也已经是个完全只能由各路 Agent 来贡献的不可名状之史山了。
+  - 事实上它现在也已经是个完全只能由各路 Agent 来贡献的不可名状之史山了。
 
 总而言之，由于以上种种不靠谱的因素均表明它（正如 Peter 本人所说）只是个 token 富哥的玩具，OpenClaw 在笔者的电脑上仅运行了不到 4 小时就被作者带着配置文件和各种数据扫地出门了。
 
@@ -66,7 +66,7 @@ weight: 1
 
 Harness 方面，笔者一直有一个观点：如果想要一个 Agent 产品好用，那么它的基座 LLM 必然需要在这个 Harness 的工具上做专门的训练，以达到最好的效果。所以，为了让这个 Claw 有更好的“任务交付能力”，我决定**直接用 Codex 现成的 Harness**，而不是像 OpenClaw 一样自己构造一套工具和外周服务。至于为什么不选 Claude Code，一方面是因为 Claude Code 闭源，一方面是因为不知道按某 A\ 的脾气会不会来封我的号。而 Codex 在 GitHub 上的维护状况看上去也比很多纯 vibe 的 xxClaw 类似物要好得多。以下引用 [Codex 贡献指南](https://github.com/openai/codex/blob/main/docs/contributing.md)中的部分内容：
 
-> ## Contributing
+> Contributing
 >
 > **External contributions are by invitation only**
 >
@@ -127,4 +127,3 @@ QQ 非官方机器人三天两头容易被封，用着多少有点难受，感�
 理想情况下，CodexClaw 可能会以这种方式维护吧，至少笔者是绝对不会随便把各种 AI 贡献接受到项目里的 : )
 
 ~~但是就目前来看 CodexClaw 已经在奔向史山的路上一去不复返了。~~
-
