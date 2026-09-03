@@ -6,7 +6,6 @@ favicon = "/favicon.png"
 
 [footer]
 since = 2022
-customText = "本博客主题效果基于 Stack 改进而来"
 
 [dateFormat]
 published = "Jan 02, 2006"

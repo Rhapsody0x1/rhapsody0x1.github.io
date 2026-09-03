@@ -2,6 +2,10 @@
 [goldmark.renderer]
 unsafe = true
 
+# 块级属性（如给 alert 附加 {.alert-purple} 或 {style="--alert-color: ..."}）
+[goldmark.parser.attribute]
+block = true
+
 [goldmark.extensions.passthrough]
 enable = true
 
