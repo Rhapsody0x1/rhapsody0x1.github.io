@@ -1,0 +1,5 @@
+{{- /* Self-hosted fonts in static/fonts/, built by the-agent-doc/animation/fonts.py. fonts.css declares every face once
+       for the whole site, in <head>, so the figures' scripts find them; the first screen's sans faces are preloaded. */ -}}
+<link rel="preload" href='{{ "fonts/blog-sans/BlogSans-Regular.woff2" | relURL }}' as="font" type="font/woff2" crossorigin>
+<link rel="preload" href='{{ "fonts/blog-sans/BlogSans-Bold.woff2" | relURL }}' as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href='{{ "fonts/fonts.css" | relURL }}'>

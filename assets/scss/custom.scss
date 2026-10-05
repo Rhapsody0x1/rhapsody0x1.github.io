@@ -15,7 +15,8 @@
 }
 
 html {
-    scrollbar-color: #d6dee1 transparent;
+    /* 主题按亮暗各给一个滑块色（variables.scss 的 --scrollbar-thumb） */
+    scrollbar-color: var(--scrollbar-thumb) transparent;
     scrollbar-width: thin;
 
     ::-webkit-scrollbar {
@@ -36,7 +37,7 @@ html {
     }
 
     ::-webkit-scrollbar-thumb {
-        background-color: #d6dee1;
+        background-color: var(--scrollbar-thumb);
         border-radius: 20px;
         border: 6px solid transparent;
         background-clip: content-box;

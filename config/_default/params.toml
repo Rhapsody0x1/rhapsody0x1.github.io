@@ -134,9 +134,10 @@ category = "Announcements"
 categoryID = "DIC_kwDOPzFdKc4CvwOk"
 mapping = "pathname"
 lightTheme = "light"
-darkTheme = "dark"
+darkTheme = "dark_dimmed"
 reactionsEnabled = 1
 emitMetadata = 0
+loading = "lazy"
 
 [comments.gitalk]
 owner = ""
